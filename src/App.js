@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Garcom from "./pages/Garcom";
+import Checkout from "./pages/Checkout";
 import Cozinha from "./pages/Cozinha";
 import Retiradas from "./pages/Retiradas";
 import Home from "./pages/Home";
@@ -8,7 +9,10 @@ const App = () => {
 	return (
 		<Router>
 			<Switch>
-				<Route exact path="/garçom">
+				<Route exact path="/checkout/:customer_id">
+					<Checkout />
+				</Route>
+				<Route exact path="/garcom">
 					<Garcom />
 				</Route>
 				<Route exact path="/cozinha">
