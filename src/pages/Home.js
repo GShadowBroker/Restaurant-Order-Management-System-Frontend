@@ -1,32 +1,29 @@
 import {
 	Container,
 	Typography,
-	Card,
-	CardActionArea,
-	CardMedia,
-	CardContent,
-	CardHeader,
-	Avatar,
-	Badge,
 	Button,
-	Paper,
 	Fade,
+	TextField,
 } from "@material-ui/core";
 import { Box } from "@material-ui/system";
-import { green } from "@material-ui/core/colors";
-import RestaurantIcon from "@material-ui/icons/Restaurant";
-import CheckIcon from "@material-ui/icons/Check";
+import SearchIcon from "@material-ui/icons/Search";
 
 import React, { useEffect, useState } from "react";
-import { getSomeItems, getCustomers } from "../service/restService";
+import {
+	getSomeItems,
+	getCustomers,
+	searchItems,
+} from "../service/restService";
 import Loading from "../components/Loading";
 import Error from "../components/Error";
-import { useHistory } from "react-router";
+import ItemList from "../components/ItemList";
+import Cart from "../components/Cart";
+import Nav from "../components/Nav";
 
 const Home = () => {
-	const history = useHistory();
 	const [loadingItems, setLoadingItems] = useState(true);
 	const [loadingCustomers, setLoadingCustomers] = useState(true);
+	const [loadingSearchItems, setLoadingSearchItems] = useState(false);
 	const [error, setError] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("Houve um erro inesperado");
 
@@ -34,6 +31,10 @@ const Home = () => {
 	const [activeCustomer, setActiveCustomer] = useState(null);
 	const [recommendedItems, setRecommendedItems] = useState([]);
 	const [cart, setCart] = useState([]);
+	const [searchedItems, setSearchedItems] = useState([]);
+	const [searchUsed, setSearchUsed] = useState(false);
+
+	const [searchTerm, setSearchTerm] = useState("");
 
 	const fetchRecommendedItems = async () => {
 		const response = await getSomeItems(5, 0);
@@ -64,6 +65,21 @@ const Home = () => {
 		}
 	};
 
+	const fetchItems = async (term) => {
+		setLoadingSearchItems(true);
+		const response = await searchItems(term);
+		if (response?.data) {
+			setSearchedItems(response.data);
+		} else {
+			const errorMessage = "Houve um erro de comunicação com o servidor.";
+			console.error(errorMessage);
+			setErrorMessage(errorMessage);
+			setError(true);
+		}
+		setLoadingSearchItems(false);
+		setSearchUsed(true);
+	};
+
 	useEffect(() => {
 		fetchCustomers();
 		fetchRecommendedItems();
@@ -79,7 +95,7 @@ const Home = () => {
 	};
 
 	const isItemInCart = (item) => {
-		return cart.indexOf(item) > -1;
+		return cart.map((el) => el.id).indexOf(item.id) > -1;
 	};
 
 	const toggleItemSelect = (item) => {
@@ -90,115 +106,97 @@ const Home = () => {
 		}
 	};
 
+	const onChangeSearch = (e) => {
+		setSearchTerm(e.target.value);
+	};
+
+	const onSubmitSearch = (e) => {
+		e.preventDefault();
+
+		if (!searchTerm.trim()) return;
+
+		fetchItems(searchTerm.trim());
+		setSearchTerm("");
+	};
+
 	if (loadingItems || loadingCustomers) return <Loading />;
 	if (error) return <Error errorMessage={errorMessage} />;
 
 	return (
 		<Fade in={true}>
-			<Container maxWidth="md">
-				<Box sx={{ display: "flex", p: 2 }}>
-					<Typography variant="body2">
-						Bem vindo(a), {activeCustomer.firstName}
-					</Typography>
-				</Box>
+			<Container maxWidth="md" sx={{ mb: 15 }}>
+				<Nav
+					page="Home"
+					title={`Bem vindo(a), ${activeCustomer.firstName}!`}
+					customerId={activeCustomer.id}
+				/>
 				<Box sx={{ display: "flex", p: 2 }}>
 					<Typography variant="h4">Restaurante Orgulho do Leão</Typography>
 				</Box>
+
+				<Box sx={{ my: 5 }}>
+					<form
+						onSubmit={onSubmitSearch}
+						style={{
+							display: "flex",
+							alignItems: "flex-end",
+							flexWrap: "wrap",
+						}}
+					>
+						<SearchIcon sx={{ color: "action.active", mr: 1, my: 0.5 }} />
+						<TextField
+							id="search"
+							label="Buscar por nome ou código"
+							variant="standard"
+							sx={{ width: 300 }}
+							value={searchTerm}
+							onChange={onChangeSearch}
+						/>
+						<Button
+							type="submit"
+							variant="outlined"
+							sx={{ ml: 5, marginTop: 2 }}
+						>
+							Buscar prato
+						</Button>
+					</form>
+				</Box>
+
+				{loadingSearchItems && <Loading />}
+
+				{searchedItems?.length > 0 && (
+					<>
+						<Box sx={{ display: "flex", p: 2 }}>
+							<Typography variant="h4">
+								Resultados ({searchedItems.length}):
+							</Typography>
+						</Box>
+						<ItemList
+							items={searchedItems}
+							isItemInCart={isItemInCart}
+							toggleItemSelect={toggleItemSelect}
+						/>
+					</>
+				)}
+
+				{searchUsed && searchedItems?.length === 0 ? (
+					<Box sx={{ display: "flex", p: 2 }}>
+						<Typography variant="body1">Nenhum resultado encontrado</Typography>
+					</Box>
+				) : null}
+
 				<Box sx={{ display: "flex", p: 2 }}>
 					<Typography variant="h4">Pratos recomendados</Typography>
 				</Box>
 
-				<Box sx={{ display: "flex", flexWrap: "wrap", p: 2 }}>
-					{recommendedItems.map((dish) => (
-						<Card
-							sx={{
-								width: 240,
-								m: 2,
-								backgroundColor: isItemInCart(dish) ? "#7bed9f" : "white",
-							}}
-							key={dish.id}
-						>
-							<CardActionArea onClick={() => toggleItemSelect(dish)}>
-								<CardHeader
-									avatar={
-										isItemInCart(dish) ? (
-											<Avatar
-												sx={{ bgcolor: green[500] }}
-												aria-label={dish.name}
-											>
-												<CheckIcon />
-											</Avatar>
-										) : null
-									}
-									subheader={`R$ ${(dish.price / 100).toFixed(2)}`}
-								/>
+				<ItemList
+					items={recommendedItems}
+					isItemInCart={isItemInCart}
+					toggleItemSelect={toggleItemSelect}
+				/>
 
-								<CardMedia
-									component="img"
-									image={dish.imageUrl}
-									alt={dish.name}
-								/>
-								<CardContent>
-									<Typography gutterBottom variant="h5" component="div">
-										{dish.name}
-									</Typography>
-									<Typography variant="body2" color="text.secondary">
-										{dish.description}
-									</Typography>
-								</CardContent>
-							</CardActionArea>
-						</Card>
-					))}
-				</Box>
 				{cart?.length > 0 && (
-					<Box
-						maxWidth="md"
-						sx={{
-							position: "fixed",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							width: "100%",
-							bottom: 0,
-						}}
-					>
-						<Paper
-							sx={{
-								display: "flex",
-								flexWrap: "wrap",
-								alignItems: "center",
-								justifyContent: "space-between",
-								minWidth: "100%",
-								p: 2,
-								borderRadius: 2,
-							}}
-							elevation={4}
-						>
-							<Badge badgeContent={cart.length} color="primary">
-								<RestaurantIcon color="action" />
-							</Badge>
-							<Typography>
-								{cart.length > 1
-									? `${cart.length} pratos selecionados`
-									: "1 prato selecionado"}
-							</Typography>
-							<Typography>
-								total:{" R$ "}
-								{(
-									cart
-										.map((el) => el.price)
-										.reduce((acc, value) => acc + value) / 100
-								).toFixed(2)}
-							</Typography>
-							<Button
-								onClick={() =>
-									history.push(`/checkout/${activeCustomer.id}`, { cart })
-								}
-							>
-								fazer pedido
-							</Button>
-						</Paper>
-					</Box>
+					<Cart cart={cart} activeCustomer={activeCustomer} />
 				)}
 			</Container>
 		</Fade>

@@ -20,6 +20,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import orderStatus from "../constants/orderStatus";
 import { webSocketContext } from "../providers/WebSocketProvider";
 import endpoints from "../constants/endpoints";
+import Nav from "../components/Nav";
 
 const Cozinha = () => {
 	const { client } = useContext(webSocketContext);
@@ -43,6 +44,7 @@ const Cozinha = () => {
 			setErrorMessage(errorMessage);
 			setError(true);
 		}
+		setLoadingUpdateStatus(false);
 	};
 
 	const changeStatus = async (order) => {
@@ -65,9 +67,8 @@ const Cozinha = () => {
 			console.error(errorMessage);
 			setErrorMessage(errorMessage);
 			setError(true);
+			setLoadingUpdateStatus(false);
 		}
-
-		setLoadingUpdateStatus(false);
 	};
 
 	const deleteOrderFromList = async (order) => {
@@ -82,9 +83,8 @@ const Cozinha = () => {
 			console.error(errorMessage);
 			setErrorMessage(errorMessage);
 			setError(true);
+			setLoadingUpdateStatus(false);
 		}
-
-		setLoadingUpdateStatus(false);
 	};
 
 	useEffect(() => {
@@ -110,6 +110,7 @@ const Cozinha = () => {
 	};
 
 	const renderActionButton = (order) => {
+		if (loadingUpdateStatus) return null;
 		if (order.status === "DELIVERED") {
 			return (
 				<Button
@@ -117,14 +118,14 @@ const Cozinha = () => {
 					startIcon={<DeleteIcon />}
 					onClick={() => deleteOrderFromList(order)}
 				>
-					{loadingUpdateStatus ? "carregando" : "Remover"}
+					Remover
 				</Button>
 			);
 		}
 
 		return isUpdateButtonDisabled(order) ? null : (
 			<Button onClick={() => changeStatus(order)}>
-				{loadingUpdateStatus ? "carregando" : orderStatus[order.status].text}
+				{orderStatus[order.status].text}
 			</Button>
 		);
 	};
@@ -134,6 +135,7 @@ const Cozinha = () => {
 	else if (!orders || orders.length === 0) {
 		return (
 			<Container maxWidth="md">
+				<Nav page="Cozinha" title="Cozinha" />
 				<Box sx={{ display: "flex", flexDirection: "column", p: 2 }}>
 					<Typography variant="body1">Não há pedidos ativos.</Typography>
 				</Box>
@@ -144,6 +146,8 @@ const Cozinha = () => {
 	return (
 		<Fade in={true}>
 			<Container maxWidth="md">
+				<Nav title="Cozinha" page="Cozinha" />
+
 				{orders?.length > 0 && (
 					<Box sx={{ display: "flex", flexDirection: "column", p: 2 }}>
 						<Typography variant="h6">Pedidos ativos:</Typography>

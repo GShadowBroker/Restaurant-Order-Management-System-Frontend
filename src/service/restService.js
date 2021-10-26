@@ -45,3 +45,9 @@ export const updateStatus = (orderId, newStatus) => {
 export const removeOrder = (orderId) => {
 	return axios.delete(`${endpoints.BASE_REST_URL}/order/${orderId}`);
 };
+
+export const searchItems = (searchTerm, limit = 10, offset = 0) => {
+	return axios.get(
+		`${endpoints.BASE_REST_URL}/item/search?term=${searchTerm}&limit=${limit}&offset=${offset}`
+	);
+};

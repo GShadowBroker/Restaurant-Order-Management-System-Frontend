@@ -19,6 +19,7 @@ import RestaurantIcon from "@material-ui/icons/Restaurant";
 import orderStatus from "../constants/orderStatus";
 import { webSocketContext } from "../providers/WebSocketProvider";
 import endpoints from "../constants/endpoints";
+import Nav from "../components/Nav";
 
 const Garcom = () => {
 	const { client } = useContext(webSocketContext);
@@ -34,7 +35,6 @@ const Garcom = () => {
 		const response = await getOrders();
 		if (response?.data) {
 			setOrders(response.data);
-			setLoadingOrders(false);
 		} else {
 			const errorMessage = "Houve um erro de comunicação com o servidor.";
 			console.error(errorMessage);
@@ -42,6 +42,7 @@ const Garcom = () => {
 			setErrorMessage(errorMessage);
 			setError(true);
 		}
+		setLoadingOrders(false);
 	};
 
 	const changeStatus = async (order) => {
@@ -64,9 +65,10 @@ const Garcom = () => {
 			console.error(errorMessage);
 			setErrorMessage(errorMessage);
 			setError(true);
+			setLoadingUpdateStatus(false);
 		}
 
-		setLoadingUpdateStatus(false);
+		setTimeout(() => setLoadingUpdateStatus(false), 1500);
 	};
 
 	useEffect(() => {
@@ -94,6 +96,7 @@ const Garcom = () => {
 	else if (!orders || orders.length === 0) {
 		return (
 			<Container maxWidth="md">
+				<Nav page={"Garçom"} title={"Garçom"} />
 				<Box sx={{ display: "flex", flexDirection: "column", p: 2 }}>
 					<Typography variant="body1">Não há pedidos ativos.</Typography>
 				</Box>
@@ -104,6 +107,7 @@ const Garcom = () => {
 	return (
 		<Fade in={true}>
 			<Container maxWidth="md">
+				<Nav page={"Garçom"} title={"Garçom"} />
 				{orders?.length > 0 && (
 					<Box sx={{ display: "flex", flexDirection: "column", p: 2 }}>
 						<Typography variant="h6">Pedidos a retirar:</Typography>
@@ -134,9 +138,7 @@ const Garcom = () => {
 												secondaryAction={
 													isUpdateButtonDisabled(order) ? null : (
 														<Button onClick={() => changeStatus(order)}>
-															{loadingUpdateStatus
-																? "carregando"
-																: orderStatus[order.status].text}
+															{orderStatus[order.status].text}
 														</Button>
 													)
 												}

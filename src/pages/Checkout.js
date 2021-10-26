@@ -28,6 +28,7 @@ import endpoints from "../constants/endpoints";
 import orderStatus from "../constants/orderStatus";
 import { getOrdersByCustomerId } from "../service/restService";
 import Error from "../components/Error";
+import Nav from "../components/Nav";
 
 const Checkout = () => {
 	const { client } = useContext(webSocketContext);
@@ -132,7 +133,6 @@ const Checkout = () => {
 
 	const handleOnObservationChange = (e) => {
 		setObservation(e.target.value);
-		console.log("observation", observation);
 	};
 
 	if (loading) return <Loading />;
@@ -141,6 +141,7 @@ const Checkout = () => {
 	return (
 		<Fade in={true}>
 			<Container maxWidth="md">
+				<Nav page="Checkout" title="Checkout" customerId={customer_id} />
 				{cart.length > 0 && (
 					<>
 						<Box sx={{ display: "flex", p: 2 }}>

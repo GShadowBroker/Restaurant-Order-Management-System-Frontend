@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import { Stomp } from "@stomp/stompjs";
+import { Client, Stomp } from "@stomp/stompjs";
 import * as SockJS from "sockjs-client";
 import endpoints from "../constants/endpoints";
 
@@ -9,9 +9,13 @@ export const WebSocketProvider = ({ children }) => {
 	const [client, setClient] = useState(null);
 
 	useEffect(() => {
-		const socket = new SockJS(endpoints.BROKER_URL);
+		// const socket = new SockJS(endpoints.BROKER_URL);
 
-		const stompClient = Stomp.over(socket);
+		const stompClient = new Client();
+
+		stompClient.webSocketFactory = () => new SockJS(endpoints.BROKER_URL);
+
+		stompClient.reconnectDelay = 5000;
 
 		stompClient.onConnect = (frame) => {
 			console.log("connected to server successfully");
