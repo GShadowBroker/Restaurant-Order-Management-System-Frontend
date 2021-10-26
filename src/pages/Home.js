@@ -38,7 +38,6 @@ const Home = () => {
 	const fetchRecommendedItems = async () => {
 		const response = await getSomeItems(5, 0);
 		if (response?.data) {
-			console.log(response.data);
 			setRecommendedItems(response.data);
 			setLoadingItems(false);
 		} else {
@@ -53,7 +52,6 @@ const Home = () => {
 	const fetchCustomers = async () => {
 		const response = await getCustomers(3, 0);
 		if (response?.data) {
-			console.log(response.data);
 			setCustomers(response.data);
 			setActiveCustomer(response.data[0]);
 			setLoadingCustomers(false);
@@ -72,12 +70,10 @@ const Home = () => {
 	}, []);
 
 	const addToCart = (item) => {
-		console.log(`Adding ${item.name} to cart...`);
 		setCart([...cart, item]);
 	};
 
 	const removeFromCart = (item) => {
-		console.log(`Removing ${item.name} from cart...`);
 		const newCart = cart.filter((el) => el.id !== item.id);
 		setCart(newCart);
 	};

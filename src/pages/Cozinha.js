@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { getOrders } from "../service/restService";
+import React, { useEffect, useState, useContext } from "react";
+import { getOrders, updateStatus, removeOrder } from "../service/restService";
 import Loading from "../components/Loading";
 import Error from "../components/Error";
 import {
@@ -10,22 +10,22 @@ import {
 	ListItemAvatar,
 	ListItemText,
 	Divider,
-	IconButton,
 	Container,
 	Typography,
 	Button,
-	Radio,
-	RadioGroup,
-	FormControlLabel,
-	TextField,
-	Fab,
 	Fade,
 } from "@material-ui/core";
 import RestaurantIcon from "@material-ui/icons/Restaurant";
+import DeleteIcon from "@material-ui/icons/Delete";
 import orderStatus from "../constants/orderStatus";
+import { webSocketContext } from "../providers/WebSocketProvider";
+import endpoints from "../constants/endpoints";
 
 const Cozinha = () => {
+	const { client } = useContext(webSocketContext);
+
 	const [loadingOrders, setLoadingOrders] = useState(true);
+	const [loadingUpdateStatus, setLoadingUpdateStatus] = useState(false);
 	const [error, setError] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("Houve um erro inesperado");
 
@@ -34,7 +34,6 @@ const Cozinha = () => {
 	const loadAllOrders = async () => {
 		const response = await getOrders();
 		if (response?.data) {
-			console.log(response.data);
 			setOrders(response.data);
 			setLoadingOrders(false);
 		} else {
@@ -46,25 +45,101 @@ const Cozinha = () => {
 		}
 	};
 
+	const changeStatus = async (order) => {
+		setLoadingUpdateStatus(true);
+		const nextStatus = orderStatus[order.status].next;
+
+		if (!nextStatus) {
+			console.error("Invalid status");
+			setLoadingUpdateStatus(false);
+			return;
+		}
+
+		const response = await updateStatus(order.id, nextStatus);
+
+		if (response && response.status === 200) {
+			// Notify everybody
+			client.publish({ destination: endpoints.APP_ORDER_NOTIFY });
+		} else {
+			const errorMessage = "Houve um erro de comunicação com o servidor.";
+			console.error(errorMessage);
+			setErrorMessage(errorMessage);
+			setError(true);
+		}
+
+		setLoadingUpdateStatus(false);
+	};
+
+	const deleteOrderFromList = async (order) => {
+		setLoadingUpdateStatus(true);
+		const response = await removeOrder(order.id);
+
+		if (response && response.status === 200) {
+			// Notify and update everybody
+			client.publish({ destination: endpoints.APP_ORDER_NOTIFY });
+		} else {
+			const errorMessage = "Houve um erro de comunicação com o servidor.";
+			console.error(errorMessage);
+			setErrorMessage(errorMessage);
+			setError(true);
+		}
+
+		setLoadingUpdateStatus(false);
+	};
+
 	useEffect(() => {
 		loadAllOrders();
 	}, []);
 
-	const getButtonText = (currentStatus) => {
-		switch (currentStatus) {
-			case "PENDING":
-				return "Marcar na fila";
-			case "IN_QUEUE":
-				return "Marcar preparando";
-			case "PREPARING":
-				return "marcar aguardando entrega";
-			default:
-				return "aguardando entrega";
+	useEffect(() => {
+		if (!client) return;
+
+		client.subscribe(endpoints.TOPIC_ORDER, (message) => {
+			loadAllOrders();
+		});
+
+		return () => client.unsubscribe(endpoints.TOPIC_ORDER);
+	}, [client]);
+
+	const isUpdateButtonDisabled = (order) => {
+		if (loadingUpdateStatus) return true;
+
+		const allowed = ["PENDING", "IN_QUEUE", "PREPARING"];
+
+		return allowed.indexOf(order.status) < 0;
+	};
+
+	const renderActionButton = (order) => {
+		if (order.status === "DELIVERED") {
+			return (
+				<Button
+					variant="outlined"
+					startIcon={<DeleteIcon />}
+					onClick={() => deleteOrderFromList(order)}
+				>
+					{loadingUpdateStatus ? "carregando" : "Remover"}
+				</Button>
+			);
 		}
+
+		return isUpdateButtonDisabled(order) ? null : (
+			<Button onClick={() => changeStatus(order)}>
+				{loadingUpdateStatus ? "carregando" : orderStatus[order.status].text}
+			</Button>
+		);
 	};
 
 	if (loadingOrders) return <Loading />;
-	if (error) return <Error errorMessage={errorMessage} />;
+	else if (error) return <Error errorMessage={errorMessage} />;
+	else if (!orders || orders.length === 0) {
+		return (
+			<Container maxWidth="md">
+				<Box sx={{ display: "flex", flexDirection: "column", p: 2 }}>
+					<Typography variant="body1">Não há pedidos ativos.</Typography>
+				</Box>
+			</Container>
+		);
+	}
 
 	return (
 		<Fade in={true}>
@@ -90,9 +165,7 @@ const Cozinha = () => {
 										<Divider variant="inset" component="li" />
 										<ListItem
 											alignItems="flex-start"
-											secondaryAction={
-												<Button>{getButtonText(order.status)}</Button>
-											}
+											secondaryAction={renderActionButton(order)}
 										>
 											<ListItemAvatar>
 												<Avatar>
@@ -103,6 +176,14 @@ const Cozinha = () => {
 												primary={`ID DO PEDIDO: ${order.id}`}
 												secondary={
 													<React.Fragment>
+														<Typography
+															component="span"
+															variant="body2"
+															sx={{ display: "block" }}
+														>
+															<strong>Cliente: </strong>{" "}
+															{`${order.customer.firstName} ${order.customer.lastName}`}
+														</Typography>
 														<Typography
 															component="span"
 															variant="body2"

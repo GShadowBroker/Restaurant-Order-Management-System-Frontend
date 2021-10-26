@@ -4,7 +4,8 @@ const variables = {
 	APP: "/app",
 	TOPIC_CHAT: "/topic/chat",
 	APP_GREETING: "/app/greeting",
-	APP_ORDER: "/app/order",
+	APP_ORDER_ADD: "/app/order/add",
+	APP_ORDER_NOTIFY: "/app/order/notify",
 	TOPIC_ORDER: "/topic/order",
 };
 

@@ -34,14 +34,13 @@ const Checkout = () => {
 
 	const location = useLocation();
 	const { customer_id } = useParams();
-	const locationCart = location.state.cart || [];
+	const locationCart = location?.state?.cart || [];
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("Houve um erro inesperado");
 
 	const [cart, setCart] = useState([]);
-	const [paymentSelected, setPaymentSelected] = useState(false);
 	const [paymentType, setPaymentType] = useState(null);
 	const [change, setChange] = useState(null);
 	const [confirmButtonDisabled, setConfirmButtonDisabled] = useState(true);
@@ -53,7 +52,6 @@ const Checkout = () => {
 	const loadCustomerOrders = async () => {
 		const response = await getOrdersByCustomerId(customer_id);
 		if (response?.data) {
-			console.log(response.data);
 			setActiveOrders(response.data);
 			setLoading(false);
 		} else {
@@ -74,10 +72,6 @@ const Checkout = () => {
 		if (!client) return;
 
 		client.subscribe(endpoints.TOPIC_ORDER, (message) => {
-			// const deserializedOrder = JSON.parse(message.body);
-			// console.log(deserializedOrder);
-			// setActiveOrders(deserializedOrder);
-			console.log(JSON.parse(message.body));
 			loadCustomerOrders();
 		});
 
@@ -85,7 +79,6 @@ const Checkout = () => {
 	}, [client]);
 
 	const removeFromCart = (item) => {
-		console.log(`Removing ${item.name} from cart...`);
 		const newCart = cart.filter((el) => el.id !== item.id);
 		setCart(newCart);
 	};
@@ -102,17 +95,14 @@ const Checkout = () => {
 			observation,
 		});
 
-		console.log("order: ", serializedOrder);
-
 		client.publish({
-			destination: endpoints.APP_ORDER,
+			destination: endpoints.APP_ORDER_ADD,
 			body: serializedOrder,
 		});
 	};
 
 	const handlePaymentSelected = (type) => {
 		setPaymentType(type);
-		setPaymentSelected(true);
 		setConfirmButtonDisabled(type !== "cartao");
 	};
 

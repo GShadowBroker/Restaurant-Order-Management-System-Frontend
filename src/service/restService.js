@@ -35,3 +35,13 @@ export const getOrdersByCustomerId = (customerId, limit, offset) => {
 		},
 	});
 };
+
+export const updateStatus = (orderId, newStatus) => {
+	return axios.put(
+		`${endpoints.BASE_REST_URL}/order/${orderId}?status=${newStatus}`
+	);
+};
+
+export const removeOrder = (orderId) => {
+	return axios.delete(`${endpoints.BASE_REST_URL}/order/${orderId}`);
+};
