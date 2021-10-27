@@ -1,0 +1,18 @@
+/api/v1/customer https://young-gorge-91852.herokuapp.com/api/v1/customer 200
+/api/v1/item https://young-gorge-91852.herokuapp.com/api/v1/item 200
+/api/v1/order https://young-gorge-91852.herokuapp.com/api/v1/order 200
+/api/v1/customer https://young-gorge-91852.herokuapp.com/api/v1/customer 200
+/restaurant https://young-gorge-91852.herokuapp.com/restaurant 200
+/app https://young-gorge-91852.herokuapp.com/app 200
+/topic https://young-gorge-91852.herokuapp.com/topic 200
+/topic/* https://young-gorge-91852.herokuapp.com/topic/:splat 200
+/app/* https://young-gorge-91852.herokuapp.com/app/:splat 200
+
+/topic/chat https://young-gorge-91852.herokuapp.com/topic/chat 200
+/app/greeting https://young-gorge-91852.herokuapp.com/app/greeting 200
+/topic/order https://young-gorge-91852.herokuapp.com/topic/order 200
+/app/order/add https://young-gorge-91852.herokuapp.com/app/order/add 200
+/app/order/notify https://young-gorge-91852.herokuapp.com/app/order/notify 200
+
+/api/v1/*  https://cadastro-de-mediadores.herokuapp.com/api/v1/:splat  200
+/*  /index.html  200
