@@ -122,6 +122,8 @@ const Home = () => {
 	if (loadingItems || loadingCustomers) return <Loading />;
 	if (error) return <Error errorMessage={errorMessage} />;
 
+	console.log("customers", JSON.stringify(customers, null, 2));
+
 	return (
 		<Fade in={true}>
 			<Container maxWidth="md" sx={{ mb: 15 }}>

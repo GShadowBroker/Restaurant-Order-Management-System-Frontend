@@ -67,6 +67,7 @@ const Checkout = () => {
 	useEffect(() => {
 		setCart(locationCart);
 		loadCustomerOrders();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
@@ -77,6 +78,7 @@ const Checkout = () => {
 		});
 
 		return () => client.unsubscribe(endpoints.TOPIC_ORDER);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [client]);
 
 	const removeFromCart = (item) => {

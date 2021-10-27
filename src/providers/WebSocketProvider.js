@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import { Client, Stomp } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import * as SockJS from "sockjs-client";
 import endpoints from "../constants/endpoints";
 
